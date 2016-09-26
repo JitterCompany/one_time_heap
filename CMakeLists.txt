@@ -41,8 +41,8 @@ CPM_InitModule(${CPM_MODULE_NAME})
 # Project sources / settings
 #------------------------------------------------------------------------------
 
-file(GLOB_RECURSE SOURCES 
-    *.c
+file(GLOB SOURCES
+    ${CPM_MODULE_NAME}/src/*.c
     )
 
 include_directories("${CPM_MODULE_NAME}" 
