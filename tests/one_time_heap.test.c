@@ -76,9 +76,11 @@ void test_one_time_heap_alloc(void)
         }
     }
     TEST_ASSERT_EQUAL(279, count);
-
-    TEST_ASSERT_EQUAL((12345-279),
-            one_time_heap_count_available(&heap));
+    
+    size_t max_available = (12345-279);
+    size_t min_available = max_available - 7;
+    TEST_ASSERT(max_available >= one_time_heap_count_available(&heap));
+    TEST_ASSERT(min_available <= one_time_heap_count_available(&heap));
 }
 
 void test_one_time_heap_alloc__zero__fails(void)
@@ -105,11 +107,13 @@ void test_one_time_heap_alloc__too_much__fails(void)
 
     one_time_heap_alloc(&heap, 279);
   
-   size_t remaining = (12345-279);
-   TEST_ASSERT_EQUAL(remaining,
-            one_time_heap_count_available(&heap));
+    size_t max_available = (12345-279);
+    size_t min_available = max_available - 7;
+    TEST_ASSERT(max_available >= one_time_heap_count_available(&heap));
+    TEST_ASSERT(min_available <= one_time_heap_count_available(&heap));
 
-    void *fail = one_time_heap_alloc(&heap, remaining+1);
+    void *fail = one_time_heap_alloc(&heap,
+            one_time_heap_count_available(&heap) + 1);
     TEST_ASSERT_EQUAL(NULL, fail);
 }
 
@@ -125,13 +129,15 @@ void test_one_time_heap_alloc__disabled__fails(void)
 
     one_time_heap_alloc(&heap, 279);
   
-   size_t remaining = (12345-279);
-   TEST_ASSERT_EQUAL(remaining,
-            one_time_heap_count_available(&heap));
+    size_t max_available = (12345-279);
+    size_t min_available = max_available - 7;
+    TEST_ASSERT(max_available >= one_time_heap_count_available(&heap));
+    TEST_ASSERT(min_available <= one_time_heap_count_available(&heap));
 
     one_time_heap_disable(&heap);
 
-   TEST_ASSERT_EQUAL(NULL, one_time_heap_alloc(&heap, remaining));
+   TEST_ASSERT_EQUAL(NULL, one_time_heap_alloc(&heap,
+               one_time_heap_count_available(&heap)));
    TEST_ASSERT_EQUAL(NULL, one_time_heap_alloc(&heap, 1));
 }
 
@@ -147,15 +153,34 @@ void test_one_time_heap_alloc__just_enough__ok(void)
 
     one_time_heap_alloc(&heap, 279);
   
-   size_t remaining = (12345-279);
-   TEST_ASSERT_EQUAL(remaining,
-            one_time_heap_count_available(&heap));
+    size_t max_available = (12345-279);
+    size_t min_available = max_available - 7;
+    TEST_ASSERT(max_available >= one_time_heap_count_available(&heap));
+    TEST_ASSERT(min_available <= one_time_heap_count_available(&heap));
 
-    void *ok = one_time_heap_alloc(&heap, remaining);
+    void *ok = one_time_heap_alloc(&heap,
+            one_time_heap_count_available(&heap));
     TEST_ASSERT_NOT_NULL(ok);
 
     TEST_ASSERT_EQUAL(0, one_time_heap_count_available(&heap));
-    TEST_ASSERT_EQUAL(NULL, one_time_heap_alloc(&heap, remaining));
+    TEST_ASSERT_EQUAL(NULL, one_time_heap_alloc(&heap, 1));
+}
+
+void test_one_time_heap_alloc__aligned_to_8_bytes(void)
+{
+    uint8_t heap_buffer[((279+7)*17)];
+    OneTimeHeap heap;
+
+    one_time_heap_init(&heap, heap_buffer, sizeof(heap_buffer));
+
+    TEST_ASSERT_EQUAL(((279+7)*17),
+            one_time_heap_count_available(&heap));
+
+    for(int i=0;i<17;i++) {
+        void* allocated = one_time_heap_alloc(&heap, 275);
+        TEST_ASSERT_NOT_NULL(allocated);
+        TEST_ASSERT_EQUAL(0, (((uintptr_t)allocated) % 8));
+    }
 }
 
 int main(void)
@@ -174,6 +199,7 @@ int main(void)
     RUN_TEST(test_one_time_heap_alloc__too_much__fails);
     RUN_TEST(test_one_time_heap_alloc__disabled__fails);
     RUN_TEST(test_one_time_heap_alloc__just_enough__ok);
+    RUN_TEST(test_one_time_heap_alloc__aligned_to_8_bytes);
 
     UNITY_END();
 

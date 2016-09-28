@@ -52,6 +52,7 @@ void one_time_heap_disable(OneTimeHeap *heap);
  *
  * @return              Pointer to a buffer of the requested size,
  *                      or NULL if the allocation failed.
+ *                      The buffer is guaranteed to be at least 8-byte aligned.
  *                      NULL is returned if not enough space is available
  *                      or if num_bytes is 0.
  */

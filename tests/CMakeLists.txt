@@ -53,7 +53,7 @@ include_directories("${TEST_NORMAL_SOURCE_DIR}/..")
 
 CPM_AddModule("cpm_unity"
     GIT_REPOSITORY "https://github.com/JitterCompany/cpm_unity.git"
-    GIT_TAG "2.3.2-8")
+    GIT_TAG "2.3.2-9")
 
 
 CPM_Finish()
