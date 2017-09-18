@@ -5,9 +5,11 @@
 #include <stddef.h>
 
 typedef struct {
-    uint8_t *next_alloc;
+    uint8_t *next_available;
     uint8_t *end;
 } OneTimeHeap;
+
+#define ONE_TIME_HEAP_DEFAULT_ALIGNMENT 8
 
 /**
  * Initialize a OneTimeHeap instance
@@ -30,8 +32,15 @@ void one_time_heap_init(OneTimeHeap *heap, void *memory, size_t sizeof_memory);
  *
  * @param heap      Ptr to a OneTimeHeap instance previously initialized
  *                  with one_time_heap_init().
+ *
+ * @param alignment Alignment for next pointer to be requested. If you want to
+ *                  allocate memory aligned to 64 bytes, less space may be 
+ *                  available than if you would request a buffer aligned
+ *                  to 4 bytes.
+ *
+ * @return          Amount of bytes available for the given alignment
  */
-size_t one_time_heap_count_available(OneTimeHeap *heap);
+size_t one_time_heap_count_available(OneTimeHeap *heap, size_t alignment);
 
 /**
  * Disable any future allocs (untill one_time_heap_init() is called again).
@@ -58,5 +67,25 @@ void one_time_heap_disable(OneTimeHeap *heap);
  */
 void *one_time_heap_alloc(OneTimeHeap *heap, size_t num_bytes);
 
+/**
+ * Try to allocate aligned memory.
+ * Similar to one_time_heap_alloc(), but with user-defined alignment.
+ * NOTE: alignment should be a power of two!
+ *
+ * @param heap          Ptr to a OneTimeHeap instance previously initialized
+ *                      with one_time_heap_init().
+ *
+ * @param num_bytes     Amount of bytes requested.
+ *
+ * @param alignment     The result is aligned to this amount of bytes.
+ *                      NOTE: this value should be a power of two.
+ *
+ * @return              Pointer to a buffer of the requested size,
+ *                      or NULL if the allocation failed.
+ *                      NULL is returned if not enough space is available
+ *                      or if num_bytes is 0.
+ */
+void *one_time_heap_alloc_aligned(OneTimeHeap *heap,
+        size_t num_bytes, size_t alignment);
 #endif
 
